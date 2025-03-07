@@ -1,0 +1,68 @@
+For running this program follow the following steps:
+
+
+* For frontend: (for all Operating system)
+
+	1. Open a new command prompt.
+	2. Navigate to the directory where you saved the program.
+	3. Type `vite` and press enter.
+	4. The GUI program will start.
+		
+		Shortcuts:
+
+            * press r + enter to restart the server
+            * press u + enter to show server url
+            * press o + enter to open in browser
+            * press c + enter to clear console
+            * press q + enter to quit
+
+	5. To exit the 	program, press `ctrl c` and press enter.
+	6. The program will terminate.
+	7. To run the program again, repeat steps 1-5.
+
+* In Windows:
+
+	For backend:
+
+	1. Open the command prompt.
+	2. Navigate to the directory where you saved the program.
+	3. Type `python network_monitor.py` and press enter.
+	4. The backend program will start.
+	5. To exit the program, press `ctrl c` and press enter.
+	6. The program will terminate.
+	7. To run the program again, repeat steps 1-5.
+
+
+	For Testing The Project:
+
+	1. Open a new command prompt.
+	2. Navigate to the directory where you saved the program.
+	3. Type `python3 test.py` and press enter.
+	4. The test cases will run.
+	5. To exit the program, press `ctrl c` and press enter.
+	6. The program will terminate.
+	7. To run the program again, repeat steps 1-5.
+
+
+* In Linux or MacOS:
+
+	For backend:
+
+	1. Open the as root terminal.
+	2. Navigate to the directory where you saved the program.
+	3. Type `sudo python3 network_monitor.py` and press enter.
+	4. The backend program will start.
+	5. To exit the program, press `ctrl c` and press enter.
+	6. The program will terminate.
+	7. To run the program again, repeat steps 1-5.
+
+
+	For Testing The Project:
+
+	1. Open a new terminal and it as root.
+	2. Navigate to the directory where you saved the program.
+	3. Type `sudo python3 test.py` and press enter.
+	4. The test cases will run.
+	5. To exit the program, press `ctrl c` and press enter.
+	6. The program will terminate.
+	7. To run the program again, repeat steps 1-5.

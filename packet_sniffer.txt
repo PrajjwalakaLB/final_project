@@ -1,0 +1,92 @@
+from scapy.all import sniff, IP, TCP, UDP, DNS, DNSQR  # type: ignore
+from flask import Flask, jsonify  # type: ignore
+from flask_cors import CORS  # type: ignore
+import threading
+import requests  # type: ignore
+import time
+import json
+import re
+
+app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
+
+# Shodan API Key
+SHODAN_API_KEY = "C5VcTBooiCYNXQwnMmZ33mqyf4Hwl5Nb"
+
+# Global state
+stats = {
+    'total_traffic': 0,
+    'suspicious_packets': 0,
+    'malicious_packets': 0,
+    'active_threats': 0,
+    'recent_alerts': []
+}
+
+# Suspicious domain name regex pattern (long queries, uncommon characters)
+SUSPICIOUS_DOMAIN_REGEX = r"[a-zA-Z0-9\-]{50,}"  # Matches domain names 50+ chars long
+
+def check_shodan_ip(ip):
+    """Check if an IP is suspicious using Shodan API."""
+    try:
+        url = f"https://api.shodan.io/shodan/host/{ip}?key={SHODAN_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+
+        # Check if the IP has open dangerous ports or is in a blacklist
+        dangerous_ports = {22, 23, 445, 3389}  # SSH, Telnet, SMB, RDP
+        open_ports = set(data.get("ports", []))
+
+        if open_ports & dangerous_ports:  # If there's an overlap
+            return True, f"IP {ip} has open high-risk ports: {open_ports}"
+
+        return False, None
+    except Exception as e:
+        print(f"Error checking Shodan: {e}")
+        return False, None
+
+def packet_callback(packet):
+    stats['total_traffic'] += 1
+    
+    if IP in packet:
+        dst_ip = packet[IP].dst
+        
+        # Check for suspicious TCP/UDP packets
+        if TCP in packet and packet[TCP].dport in [22, 23, 445, 3389]:
+            stats['suspicious_packets'] += 1
+            stats['recent_alerts'].append({
+                'timestamp': time.time(),
+                'type': 'suspicious',
+                'details': f"Suspicious port access: {packet[TCP].dport} to {dst_ip}"
+            })
+        
+        # Check if the destination IP is malicious using Shodan
+        is_malicious, reason = check_shodan_ip(dst_ip)
+        if is_malicious:
+            stats['malicious_packets'] += 1
+            stats['active_threats'] += 1
+            stats['recent_alerts'].append({
+                'timestamp': time.time(),
+                'type': 'malicious',
+                'details': reason
+            })
+    
+    # Check for suspicious DNS queries
+    if DNS in packet and DNSQR in packet:
+        domain_name = packet[DNSQR].qname.decode('utf-8', 'ignore')
+        if re.search(SUSPICIOUS_DOMAIN_REGEX, domain_name):
+            stats['suspicious_packets'] += 1
+            stats['recent_alerts'].append({
+                'timestamp': time.time(),
+                'type': 'suspicious_dns',
+                'details': f"Suspicious long domain detected: {domain_name}"
+            })
+
+def start_sniffing():
+    sniff(prn=packet_callback, store=False)
+
+def run_flask():
+    app.run(host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    threading.Thread(target=start_sniffing, daemon=True).start()
+    run_flask()
